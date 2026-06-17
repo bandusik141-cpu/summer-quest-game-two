@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пляжный Бар: Мастер Коктейлей</title>
+    <style>
+        :root {
+            --beach-yellow: #fceabb;
+            --ocean-blue: #0093e9;
+            --sunset-orange: #ff6a00;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0093e9 0%, #80d0c7 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #333;
+        }
+
+        #game-card {
+            background: rgba(255, 255, 255, 0.9);
+            width: min(90%, 500px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            text-align: center;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 { color: var(--sunset-orange); margin-top: 0; }
+        p { line-height: 1.5; }
+
+        .screen { display: none; animation: fadeIn 0.5s ease; }
+        .active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            background: var(--sunset-orange);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(255, 106, 0, 0.3);
+        }
+
+        .btn:hover { transform: scale(1.05); background: #e65c00; }
+
+        /* ===== RECIPE VIEW ===== */
+        .recipe-list {
+            list-style: none;
+            padding: 0;
+            font-size: 1.3rem;
+            margin: 20px 0;
+        }
+
+        .recipe-item {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .icon { width: 40px; height: 40px; }
+
+        /* ===== GAMEPLAY VIEW ===== */
+        .ingredients-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .ingredient-btn {
+            background: white;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .ingredient-btn:hover { border-color: var(--ocean-blue); background: #f0faff; }
+        .ingredient-btn:active { transform: scale(0.95); }
+
+        .counter {
+            background: var(--ocean-blue);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        #timer-bar {
+            width: 100%;
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        #timer-fill {
+            height: 100%;
+            background: var(--sunset-orange);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        /* ===== RESULT ===== */
+        #cocktail-img { width: 150px; margin: 20px 0; }
+        .secret-code {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 5px;
+            color: var(--sunset-orange);
+            background: #fff9e6;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px dashed #ff6a00;
+            margin-top: 20px;
+        }
+
+        /* ===== DECORATION ===== */
+        .palm { position: absolute; width: 100px; opacity: 0.2; pointer-events: none; }
+        .palm-left { bottom: -20px; left: -30px; transform: rotate(20deg); }
+        .palm-right { top: -20px; right: -30px; transform: rotate(-150deg); }
+    </style>
+</head>
+<body>
+
+<div id="game-card">
+    <img src="https://cdn-icons-png.flaticon.com/512/1155/1155255.png" class="palm palm-left">
+    <img src="https://cdn-icons-png.flaticon.com/512/1155/1155255.png" class="palm palm-right">
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="screen active">
+        <h1>🍹 Пляжный Бар</h1>
+        <p>Добро пожаловать в "Райский Уголок"! Клиенты ждут свои заказы. Запомни рецепт и приготовь коктейль вовремя!</p>
+        <button class="btn" onclick="startRecipe()">Принять заказ</button>
+    </div>
+
+    <!-- RECIPE SCREEN -->
+    <div id="recipe-screen" class="screen">
+        <h2>Твой заказ:</h2>
+        <div id="cocktail-name" style="font-weight: bold; font-size: 1.2rem; color: #0077b6;"></div>
+        <ul id="recipe-list" class="recipe-list"></ul>
+        <p style="color: #888; font-size: 0.9rem;">Запомни ингредиенты!</p>
+        <div id="memo-timer" style="font-size: 1.5rem; font-weight: bold; color: var(--sunset-orange);">5</div>
+    </div>
+
+    <!-- PLAY SCREEN -->
+    <div id="play-screen" class="screen">
+        <h2>Смешивай!</h2>
+        <div class="ingredients-grid" id="ingredients-grid"></div>
+        <div id="timer-bar"><div id="timer-fill"></div></div>
+        <button class="btn" style="width: 100%;" onclick="checkResult()">Подать коктейль!</button>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="result-screen" class="screen">
+        <h2 id="result-title"></h2>
+        <p id="result-text"></p>
+        <img id="cocktail-img" src="">
+        <div id="code-container" style="display: none;">
+            <p>На салфетке под бокалом что-то написано:</p>
+            <div class="secret-code" id="secret-code"></div>
+        </div>
+        <button id="retry-btn" class="btn" onclick="location.reload()">Попробовать снова</button>
+    </div>
+</div>
+
+<script>
+    // --- НАСТРОЙКИ ДЛЯ ИГРОКА ---
+    const PLAYER_CONFIG = {
+        name: "Друг",
+        cocktail: "Тропический бриз",
+        code: "S7", // Уникальный код для этого игрока
+        recipe: [
+            { id: 'ice', name: 'Лед', count: 3, img: 'https://cdn-icons-png.flaticon.com/512/1821/1821034.png' },
+            { id: 'lemon', name: 'Лимон', count: 2, img: 'https://cdn-icons-png.flaticon.com/512/2909/2909813.png' },
+            { id: 'mint', name: 'Мята', count: 4, img: 'https://cdn-icons-png.flaticon.com/512/2316/2316885.png' },
+            { id: 'umbrella', name: 'Зонтик', count: 1, img: 'https://cdn-icons-png.flaticon.com/512/1047/1047514.png' }
+        ],
+        memoTime: 6, // Время на запоминание (сек)
+        playTime: 10  // Время на приготовление (сек)
+    };
+
+    let userSelection = {};
+    let timerInterval;
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function startRecipe() {
+        showScreen('recipe-screen');
+        document.getElementById('cocktail-name').innerText = PLAYER_CONFIG.cocktail;
+        const list = document.getElementById('recipe-list');
+        list.innerHTML = '';
+        
+        PLAYER_CONFIG.recipe.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'recipe-item';
+            li.innerHTML = `<img src="${item.img}" class="icon"> <span>${item.name} x ${item.count}</span>`;
+            list.appendChild(li);
+        });
+
+        let timeLeft = PLAYER_CONFIG.memoTime;
+        const timerDisplay = document.getElementById('memo-timer');
+        const interval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                startPlay();
+            }
+        }, 1000);
+    }
+
+    function startPlay() {
+        showScreen('play-screen');
+        const grid = document.getElementById('ingredients-grid');
+        grid.innerHTML = '';
+        
+        PLAYER_CONFIG.recipe.forEach(item => {
+            userSelection[item.id] = 0;
+            const btn = document.createElement('div');
+            btn.className = 'ingredient-btn';
+            btn.innerHTML = `
+                <img src="${item.img}" class="icon">
+                <span>${item.name}</span>
+                <div class="counter" id="count-${item.id}">0</div>
+            `;
+            btn.onclick = () => {
+                userSelection[item.id]++;
+                document.getElementById(`count-${item.id}`).innerText = userSelection[item.id];
+            };
+            grid.appendChild(btn);
+        });
+
+        let timeLeft = PLAYER_CONFIG.playTime * 10;
+        const totalTime = PLAYER_CONFIG.playTime * 10;
+        const fill = document.getElementById('timer-fill');
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            fill.style.width = (timeLeft / totalTime * 100) + '%';
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                checkResult();
+            }
+        }, 100);
+    }
+
+    function checkResult() {
+        clearInterval(timerInterval);
+        showScreen('result-screen');
+        
+        let isCorrect = true;
+        PLAYER_CONFIG.recipe.forEach(item => {
+            if (userSelection[item.id] !== item.count) {
+                isCorrect = false;
+            }
+        });
+
+        const title = document.getElementById('result-title');
+        const text = document.getElementById('result-text');
+        const img = document.getElementById('cocktail-img');
+        const codeCont = document.getElementById('code-container');
+        const retryBtn = document.getElementById('retry-btn');
+
+        if (isCorrect) {
+            title.innerText = "Идеально! ✨";
+            title.style.color = "#2ecc71";
+            text.innerText = `Клиент в восторге от коктейля "${PLAYER_CONFIG.cocktail}"!`;
+            img.src = "https://cdn-icons-png.flaticon.com/512/2441/2441998.png";
+            codeCont.style.display = "block";
+            document.getElementById('secret-code').innerText = PLAYER_CONFIG.code;
+            retryBtn.style.display = "none";
+        } else {
+            title.innerText = "Ой, что-то не так... 🤢";
+            title.style.color = "#e74c3c";
+            text.innerText = "Коктейль получился невкусным. Попробуй вспомнить рецепт точнее!";
+            img.src = "https://cdn-icons-png.flaticon.com/512/1047/1047503.png";
+            codeCont.style.display = "none";
+            retryBtn.innerText = "Переделать заказ";
+        }
+    }
+</script>
+
+</body>
+</html>
