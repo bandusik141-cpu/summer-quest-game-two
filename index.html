@@ -9,6 +9,7 @@
             --ocean-blue: #00b4d8;
             --sunset-orange: #ff9e00;
             --sand-yellow: #ffea00;
+            --danger: #ff4d6d;
         }
 
         body {
@@ -32,9 +33,10 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.15);
             text-align: center;
             border: 5px solid white;
+            position: relative;
         }
 
-        h1 { color: #023e8a; margin-top: 0; font-size: 2rem; }
+        h1 { color: #023e8a; margin-top: 0; font-size: 1.8rem; }
         p { color: #0077b6; font-weight: bold; }
 
         .screen { display: none; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -63,33 +65,43 @@
         .btn:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #cc7e00; }
         .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #cc7e00; }
 
-        /* ===== RECIPE VIEW ===== */
+        /* ===== UI ===== */
+        #round-indicator {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: var(--ocean-blue);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
         .recipe-box {
             background: #caf0f8;
             padding: 15px;
             border-radius: 20px;
-            margin: 20px 0;
+            margin: 15px 0;
         }
 
         .recipe-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px;
+            padding: 8px 15px;
             background: white;
             margin: 5px 0;
             border-radius: 12px;
             font-size: 1.1rem;
         }
 
-        .icon { width: 40px; height: 40px; object-fit: contain; }
-
-        /* ===== GAMEPLAY VIEW ===== */
+        /* ===== GAMEPLAY ===== */
         .ingredients-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-            margin: 20px 0;
+            margin: 15px 0;
         }
 
         .ingredient-btn {
@@ -111,7 +123,7 @@
             position: absolute;
             top: -5px;
             right: -5px;
-            background: #ff4d6d;
+            background: var(--danger);
             color: white;
             width: 25px;
             height: 25px;
@@ -123,45 +135,49 @@
             font-weight: bold;
         }
 
+        .icon { width: 45px; height: 45px; object-fit: contain; }
+
         #timer-bar {
             width: 100%;
             height: 12px;
             background: #caf0f8;
             border-radius: 10px;
-            margin-top: 15px;
+            margin-top: 10px;
             overflow: hidden;
         }
 
         #timer-fill {
             height: 100%;
-            background: #ff4d6d;
+            background: var(--danger);
             width: 100%;
             transition: width 0.1s linear;
         }
 
         /* ===== RESULT ===== */
-        .result-icon { width: 120px; margin: 20px 0; }
+        .result-icon { width: 100px; margin: 15px 0; }
         .next-btn { background: #2ecc71; box-shadow: 0 5px 0 #27ae60; }
-        .next-btn:hover { box-shadow: 0 7px 0 #27ae60; }
     </style>
 </head>
 <body>
 
 <div id="game-card">
+    <div id="round-indicator" style="display: none;">Раунд: <span id="round-num">1</span>/3</div>
+
     <!-- START SCREEN -->
     <div id="start-screen" class="screen active">
-        <img src="https://img.icons8.com/fluency/96/cocktail.png" alt="bar">
+        <img src="https://img.icons8.com/emoji/96/tropical-drink.png" alt="bar">
         <h1>Пляжный Бар</h1>
-        <p>Запомни рецепт и приготовь идеальный летний коктейль! Кстате, скоро последняя игра 😘</p>
-        <button class="btn" onclick="startRecipe()">Начать!</button>
+        <p>Приготовь 3 коктейля разной сложности, чтобы пройти дальше! Там кстате в третьем раунде будет тазик, он захочет все идеально, так что будь внимательным!</p>
+        <button class="btn" onclick="startNewRound()">Начать работу!</button>
     </div>
 
     <!-- RECIPE SCREEN -->
     <div id="recipe-screen" class="screen">
-        <h2>Твой заказ:</h2>
-        <div id="cocktail-name" style="font-size: 1.4rem; color: #023e8a; margin-bottom: 10px;"></div>
+        <h2 id="round-title">Заказ №1</h2>
+        <div id="cocktail-name" style="font-size: 1.3rem; color: #023e8a; margin-bottom: 5px;"></div>
         <div id="recipe-list" class="recipe-box"></div>
-        <div id="memo-timer" style="font-size: 2rem; font-weight: bold; color: #ff4d6d;">5</div>
+        <p>Запомни ингредиенты!</p>
+        <div id="memo-timer" style="font-size: 2rem; font-weight: bold; color: var(--danger);">5</div>
     </div>
 
     <!-- PLAY SCREEN -->
@@ -169,7 +185,7 @@
         <h2>Смешивай!</h2>
         <div class="ingredients-grid" id="ingredients-grid"></div>
         <div id="timer-bar"><div id="timer-fill"></div></div>
-        <button class="btn" onclick="checkResult()">Готово!</button>
+        <button class="btn" onclick="checkResult()">Подать!</button>
     </div>
 
     <!-- RESULT SCREEN -->
@@ -177,26 +193,46 @@
         <h2 id="result-title"></h2>
         <p id="result-text"></p>
         <img id="result-img" class="result-icon" src="">
-        <button id="next-btn" class="btn next-btn" style="display: none;" onclick="goToNextGame()">Идти дальше ➔</button>
-        <button id="retry-btn" class="btn" style="display: none;" onclick="location.reload()">Попробовать снова</button>
+        <button id="next-round-btn" class="btn" style="display: none;" onclick="startNewRound()">Следующий заказ</button>
+        <button id="final-btn" class="btn next-btn" style="display: none;" onclick="goToNextGame()">Идти дальше ➔</button>
+        <button id="retry-btn" class="btn" style="display: none;" onclick="location.reload()">Начать сначала</button>
     </div>
 </div>
 
 <script>
-    // --- НАСТРОЙКИ ---
-    const CONFIG = {
-        cocktail: "Тропический бриз",
-        nextGameUrl: "ССЫЛКА_НА_ИГРУ_3", // ВСТАВЬ СЮДА ССЫЛКУ НА 3-Ю ИГРУ
-        recipe: [
-            { id: 'ice', name: 'Лед', count: 3, img: 'https://img.icons8.com/fluency/96/ice-cube.png' },
-            { id: 'lemon', name: 'Лимон', count: 2, img: 'https://img.icons8.com/fluency/96/lemon.png' },
-            { id: 'mint', name: 'Мята', count: 4, img: 'https://img.icons8.com/fluency/96/mint.png' },
-            { id: 'umbrella', name: 'Зонтик', count: 1, img: 'https://img.icons8.com/fluency/96/beach-umbrella.png' }
-        ],
-        memoTime: 6,
-        playTime: 12
+    // --- ДАННЫЕ ИГРЫ ---
+    const NEXT_GAME_URL = "ССЫЛКА_НА_ИГРУ_3"; 
+    
+    const INGREDIENTS = {
+        ice: { name: 'Лед', img: 'https://img.icons8.com/fluency/96/ice-cube.png' },
+        lemon: { name: 'Лимон', img: 'https://img.icons8.com/fluency/96/lemon.png' },
+        mint: { name: 'Мята', img: 'https://img.icons8.com/fluency/96/mint.png' },
+        umbrella: { name: 'Зонтик', img: 'https://img.icons8.com/fluency/96/beach-umbrella.png' },
+        orange: { name: 'Апельсин', img: 'https://img.icons8.com/fluency/96/orange.png' }
     };
 
+    const ROUNDS = [
+        {
+            name: "Мохито Лайт",
+            recipe: [{id: 'ice', count: 2}, {id: 'mint', count: 3}],
+            memoTime: 5,
+            playTime: 10
+        },
+        {
+            name: "Цитрусовый Бум",
+            recipe: [{id: 'ice', count: 3}, {id: 'lemon', count: 2}, {id: 'orange', count: 2}],
+            memoTime: 6,
+            playTime: 12
+        },
+        {
+            name: "Райский Шторм",
+            recipe: [{id: 'ice', count: 4}, {id: 'lemon', count: 3}, {id: 'mint', count: 5}, {id: 'umbrella', count: 1}, {id: 'orange', count: 2}],
+            memoTime: 8,
+            playTime: 15
+        }
+    ];
+
+    let currentRoundIdx = -1;
     let userSelection = {};
     let timerInterval;
 
@@ -205,21 +241,28 @@
         document.getElementById(id).classList.add('active');
     }
 
-    function startRecipe() {
+    function startNewRound() {
+        currentRoundIdx++;
+        document.getElementById('round-indicator').style.display = 'block';
+        document.getElementById('round-num').innerText = currentRoundIdx + 1;
+        
+        const round = ROUNDS[currentRoundIdx];
         showScreen('recipe-screen');
-        document.getElementById('cocktail-name').innerText = CONFIG.cocktail;
+        document.getElementById('round-title').innerText = `Заказ №${currentRoundIdx + 1}`;
+        document.getElementById('cocktail-name').innerText = round.name;
+        
         const list = document.getElementById('recipe-list');
         list.innerHTML = '';
-        
-        CONFIG.recipe.forEach(item => {
+        round.recipe.forEach(item => {
             const div = document.createElement('div');
             div.className = 'recipe-item';
-            div.innerHTML = `<span>${item.name}</span> <span>x ${item.count}</span>`;
+            div.innerHTML = `<span>${INGREDIENTS[item.id].name}</span> <span>x ${item.count}</span>`;
             list.appendChild(div);
         });
 
-        let timeLeft = CONFIG.memoTime;
+        let timeLeft = round.memoTime;
         const timerDisplay = document.getElementById('memo-timer');
+        timerDisplay.innerText = timeLeft;
         const interval = setInterval(() => {
             timeLeft--;
             timerDisplay.innerText = timeLeft;
@@ -231,28 +274,33 @@
     }
 
     function startPlay() {
+        const round = ROUNDS[currentRoundIdx];
         showScreen('play-screen');
         const grid = document.getElementById('ingredients-grid');
         grid.innerHTML = '';
         
-        CONFIG.recipe.forEach(item => {
-            userSelection[item.id] = 0;
+        userSelection = {};
+        // В 3 раунде показываем все ингредиенты для сложности
+        const availableIngredients = currentRoundIdx === 2 ? Object.keys(INGREDIENTS) : round.recipe.map(r => r.id);
+        
+        availableIngredients.forEach(id => {
+            userSelection[id] = 0;
             const btn = document.createElement('div');
             btn.className = 'ingredient-btn';
             btn.innerHTML = `
-                <img src="${item.img}" class="icon">
-                <span style="font-size: 0.8rem; margin-top: 5px;">${item.name}</span>
-                <div class="counter" id="count-${item.id}">0</div>
+                <img src="${INGREDIENTS[id].img}" class="icon">
+                <span style="font-size: 0.8rem; margin-top: 5px;">${INGREDIENTS[id].name}</span>
+                <div class="counter" id="count-${id}">0</div>
             `;
             btn.onclick = () => {
-                userSelection[item.id]++;
-                document.getElementById(`count-${item.id}`).innerText = userSelection[item.id];
+                userSelection[id]++;
+                document.getElementById(`count-${id}`).innerText = userSelection[id];
             };
             grid.appendChild(btn);
         });
 
-        let timeLeft = CONFIG.playTime * 10;
-        const totalTime = CONFIG.playTime * 10;
+        let timeLeft = round.playTime * 10;
+        const totalTime = round.playTime * 10;
         const fill = document.getElementById('timer-fill');
         
         timerInterval = setInterval(() => {
@@ -267,41 +315,58 @@
 
     function checkResult() {
         clearInterval(timerInterval);
+        const round = ROUNDS[currentRoundIdx];
         showScreen('result-screen');
         
         let isCorrect = true;
-        CONFIG.recipe.forEach(item => {
+        // Проверяем только те, что были в рецепте
+        round.recipe.forEach(item => {
             if (userSelection[item.id] !== item.count) isCorrect = false;
+        });
+        // Проверяем, не добавил ли лишнего (для 3 раунда)
+        Object.keys(userSelection).forEach(id => {
+            const inRecipe = round.recipe.find(r => r.id === id);
+            if (!inRecipe && userSelection[id] > 0) isCorrect = false;
         });
 
         const title = document.getElementById('result-title');
         const text = document.getElementById('result-text');
         const img = document.getElementById('result-img');
-        const nextBtn = document.getElementById('next-btn');
+        const nextBtn = document.getElementById('next-round-btn');
+        const finalBtn = document.getElementById('final-btn');
         const retryBtn = document.getElementById('retry-btn');
 
         if (isCorrect) {
-            title.innerText = "Идеально! ✨";
-            title.style.color = "#2ecc71";
-            text.innerText = "Ты настоящий мастер! Твой путь продолжается.";
-            img.src = "https://img.icons8.com/fluency/144/checked-checkbox.png";
-            nextBtn.style.display = "block";
-            retryBtn.style.display = "none";
+            if (currentRoundIdx < ROUNDS.length - 1) {
+                title.innerText = "Отлично! ✨";
+                text.innerText = "Клиент доволен, но в очереди уже следующий! Кто же будет следующим?";
+                img.src = "https://img.icons8.com/fluency/144/checked-checkbox.png";
+                nextBtn.style.display = "block";
+                finalBtn.style.display = "none";
+                retryBtn.style.display = "none";
+            } else {
+                title.innerText = "ТЫ МАСТЕР! 🍹";
+                text.innerText = "Все заказы выполнены идеально. Партия гордится тобой! Ой блин, пляж!";
+                img.src = "https://img.icons8.com/fluency/144/star.png";
+                nextBtn.style.display = "none";
+                finalBtn.style.display = "block";
+                retryBtn.style.display = "none";
+            }
         } else {
             title.innerText = "Ой... 🤢";
-            title.style.color = "#ff4d6d";
-            text.innerText = "Коктейль получился странным. Попробуй еще раз!";
+            text.innerText = "Коктейль испорчен. Придется начать смену заново! Будь внимательнее в следующий раз.";
             img.src = "https://img.icons8.com/fluency/144/cancel.png";
             nextBtn.style.display = "none";
+            finalBtn.style.display = "none";
             retryBtn.style.display = "block";
         }
     }
 
     function goToNextGame() {
-        if (CONFIG.nextGameUrl === "ССЫЛКА_НА_ИГРУ_3") {
-            alert("Пожалуйста, вставь ссылку на 3-ю игру в коде (переменная nextGameUrl)");
+        if (NEXT_GAME_URL === "ССЫЛКА_НА_ИГРУ_3") {
+            alert("Пожалуйста, вставь ссылку на 3-ю игру в коде");
         } else {
-            window.location.href = CONFIG.nextGameUrl;
+            window.location.href = NEXT_GAME_URL;
         }
     }
 </script>
